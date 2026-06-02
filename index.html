@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Invoice Generator – Rajesh Vishram Gori HUF</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --ink:#1C1C1C;--ink2:#3D3D3D;--muted:#767676;
+  --stripe:#F5F5F4;--thead:#E7E5E4;--line:#D6D3D1;
+  --green:#166534;--net-bg:#F0FDF4;
+  --amber:#B45309;--amber-bg:#FFFBEB;
+  --bg:#F2F1EF;--card:#FFFFFF;--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+.shell{display:grid;grid-template-columns:300px 1fr;min-height:100vh}
+
+/* sidebar */
+.sidebar{background:#1C1C1C;padding:24px 20px;display:flex;flex-direction:column;gap:0;overflow-y:auto}
+.sb-logo{font-family:'Instrument Serif',serif;font-size:20px;color:#fff;margin-bottom:2px}
+.sb-sub{font-size:10px;color:#6B6B6B;text-transform:uppercase;letter-spacing:.8px;margin-bottom:24px}
+.sec-lbl{font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:#6B6B6B;margin:18px 0 7px}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:10.5px;font-weight:500;color:#B0B0B0;margin-bottom:3px}
+.field input,.field select,.field textarea{
+  width:100%;background:#2A2A2A;border:1px solid #3A3A3A;border-radius:5px;
+  color:#F0F0F0;font-family:'DM Sans',sans-serif;font-size:12.5px;padding:6px 9px;outline:none;
+  transition:border-color .15s
+}
+.field input:focus,.field textarea:focus{border-color:#888}
+.field textarea{resize:vertical;min-height:52px;line-height:1.4;font-size:11.5px}
+
+.toggle-row{display:flex;align-items:center;gap:8px;margin:4px 0 14px}
+.toggle-row label{font-size:11.5px;color:#B0B0B0;cursor:pointer}
+.tog{position:relative;display:inline-block;width:34px;height:18px}
+.tog input{opacity:0;width:0;height:0}
+.tog-sl{position:absolute;inset:0;background:#3A3A3A;border-radius:18px;cursor:pointer;transition:.2s}
+.tog-sl:before{content:'';position:absolute;height:12px;width:12px;left:3px;bottom:3px;background:#777;border-radius:50%;transition:.2s}
+.tog input:checked+.tog-sl{background:#52525B}
+.tog input:checked+.tog-sl:before{transform:translateX(16px);background:#E0E0E0}
+
+.btn-render{margin-top:20px;display:block;width:100%;padding:11px;background:#fff;
+  color:#1C1C1C;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
+  border:none;border-radius:6px;cursor:pointer;transition:opacity .15s}
+.btn-render:hover{opacity:.88}
+.btn-print{display:block;width:100%;padding:10px;margin-top:8px;
+  background:transparent;color:#777;font-family:'DM Sans',sans-serif;font-size:12px;
+  border:1px solid #3A3A3A;border-radius:6px;cursor:pointer;transition:all .15s}
+.btn-print:hover{color:#ccc;border-color:#666}
+
+/* preview */
+.preview{padding:28px 32px;overflow-y:auto;background:var(--bg)}
+.prev-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.prev-title{font-family:'Instrument Serif',serif;font-size:22px;color:var(--ink)}
+.inv-badge{font-size:11px;color:var(--muted);background:#fff;border:1px solid var(--line);padding:4px 12px;border-radius:20px}
+
+/* invoice */
+#invoice{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);
+  padding:32px 36px;max-width:720px;margin:0 auto;
+  box-shadow:0 2px 16px rgba(0,0,0,.07);font-size:12.5px;line-height:1.5
+}
+.inv-top{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid var(--ink)}
+.from-name{font-family:'Instrument Serif',serif;font-size:18px;color:var(--ink);margin-bottom:3px}
+.from-meta{font-size:11px;color:var(--muted);line-height:1.7}
+.inv-title-block{text-align:right}
+.inv-word{font-family:'Instrument Serif',serif;font-size:28px;color:var(--ink);line-height:1;margin-bottom:8px}
+.inv-num{font-size:11.5px;color:var(--muted);margin-bottom:2px}
+
+.sec-bar{background:var(--ink);color:#fff;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:5px 10px;border-radius:3px 3px 0 0;margin-top:14px}
+.sec-body{background:var(--stripe);padding:10px 12px;border-radius:0 0 3px 3px;font-size:11.5px;line-height:1.7}
+.to-name{font-weight:600;font-size:13px;color:var(--ink);margin-bottom:2px}
+.to-meta{font-size:11px;color:var(--muted)}
+
+.svc-table{width:100%;border-collapse:collapse;font-size:11.5px;margin-top:0}
+.svc-table thead tr{background:var(--thead)}
+.svc-table thead th{padding:7px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--ink);border-bottom:1px solid var(--line)}
+.svc-table thead th.r{text-align:right}
+.svc-table tbody td{padding:10px 10px;vertical-align:top;border-bottom:1px solid var(--line);background:var(--stripe)}
+.svc-table tbody td.r{text-align:right;font-weight:500}
+.svc-main{font-weight:600;color:var(--ink)}
+.svc-sub{font-size:10.5px;color:var(--muted);margin-top:2px;line-height:1.5}
+
+.tot-wrap{display:flex;justify-content:flex-end;margin-top:4px}
+.tot-table{width:260px;border-collapse:collapse;font-size:12px}
+.tot-table td{padding:4px 8px}
+.tot-table .tl{color:var(--muted)}
+.tot-table .tv{text-align:right;font-weight:500}
+.tot-table .net td{background:var(--net-bg);font-weight:700;color:var(--green);font-size:12.5px;padding:7px 10px;border-top:1.5px solid #166534;border-bottom:1.5px solid #166534}
+.tot-table .div td{border-top:1px solid var(--line);padding-top:5px}
+
+.words-row{background:var(--stripe);padding:7px 12px;font-size:11.5px;font-weight:600;border-radius:3px;margin-top:8px}
+.rcm-note{background:var(--amber-bg);border-left:3px solid var(--amber);padding:8px 12px;font-size:11px;color:#92400E;margin-top:10px;line-height:1.6;border-radius:0 3px 3px 0}
+.bank-grid{display:grid;grid-template-columns:100px 1fr;gap:3px 10px;font-size:11px}
+.bk{color:var(--muted)}.bv{font-weight:600;color:var(--ink)}
+.tds-aside{font-size:11px;color:var(--muted);line-height:1.6;padding-left:14px;border-left:1px solid var(--line)}
+.pay-cols{display:flex;gap:0;margin-top:0}
+.pay-bank{flex:0 0 58%}.pay-tds{flex:1;padding-left:16px;border-left:1px solid var(--line)}
+.inv-footer{display:flex;justify-content:space-between;align-items:flex-end;margin-top:20px;padding-top:14px;border-top:1px solid var(--line)}
+.foot-left{font-size:10.5px;color:var(--muted);line-height:1.7}
+.sig-block{text-align:right;font-size:11.5px;color:var(--ink)}
+.sig-line{border-top:1px solid var(--ink);width:150px;margin:30px 0 4px auto}
+.sig-lbl{font-size:10.5px;color:var(--muted)}
+
+@media print{
+  .shell{display:block}
+  .sidebar{display:none}
+  .preview{padding:0;background:#fff}
+  .prev-hdr{display:none}
+  #invoice{box-shadow:none;border:none;padding:16px;max-width:100%;border-radius:0}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar">
+  <div class="sb-logo">Invoice Generator</div>
+  <div class="sb-sub">Rajesh Vishram Gori HUF</div>
+
+  <div class="sec-lbl">Invoice Details</div>
+  <div class="field"><label>Invoice No.</label><input id="f_invno" value="0001/2026-27"/></div>
+  <div class="field"><label>Invoice Date</label><input id="f_date" type="date" value="2026-06-01"/></div>
+  <div class="field"><label>Service Period</label><input id="f_period" value="01/05/2026 to 31/05/2026"/></div>
+
+  <div class="sec-lbl">Financials</div>
+  <div class="field"><label>License Fee (₹)</label><input id="f_fee" type="number" value="211000"/></div>
+  <div class="field"><label>TDS Rate (%)</label><input id="f_tds" type="number" value="10" min="0" max="30" step="0.5"/></div>
+
+  <div class="sec-lbl">GST Status</div>
+  <div class="toggle-row">
+    <label class="tog"><input type="checkbox" id="f_gst_reg"/><span class="tog-sl"></span></label>
+    <label for="f_gst_reg">Licensor is GST Registered</label>
+  </div>
+  <div id="gst_fields" style="display:none">
+    <div class="field"><label>GSTIN (Licensor)</label><input id="f_gstin" placeholder="27XXXXXXXXXXXXX"/></div>
+    <div class="field"><label>GST Rate (%)</label><input id="f_gstrate" type="number" value="18" step="0.5"/></div>
+  </div>
+
+  <div class="sec-lbl">Premises</div>
+  <div class="field"><label>Address</label>
+    <textarea id="f_premises">Unit No. 34, Ground Floor, Mulund Udyog Premises Co-op. Society Ltd., Minerva Dealer Industrial Estate, B-Shed, L.B.S. Marg, Mulund (West), Mumbai – 400080 (C.T.S. No. 551/62)</textarea>
+  </div>
+  <div class="field"><label>L&L Agreement Date</label><input id="f_agr_date" value="15/04/2026"/></div>
+
+  <button class="btn-render" onclick="render()">↻ Refresh Preview</button>
+  <button class="btn-print" onclick="window.print()">⎙ Print / Export PDF</button>
+</aside>
+
+<main class="preview">
+  <div class="prev-hdr">
+    <div class="prev-title">Invoice Preview</div>
+    <div class="inv-badge" id="inv_badge">0001/2026-27</div>
+  </div>
+  <div id="invoice"></div>
+</main>
+</div>
+
+<script>
+const ifmt = n => {
+  const [i,d] = Math.abs(n).toFixed(2).split('.');
+  if(i.length<=3) return '₹'+i+'.'+d;
+  const l3=i.slice(-3),r=i.slice(0,-3);
+  const ch=[];let s=r;
+  while(s.length>2){ch.unshift(s.slice(-2));s=s.slice(0,-2);}
+  if(s)ch.unshift(s);
+  return '₹'+ch.join(',')+','+l3+'.'+d;
+};
+const ONES=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten',
+  'Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+const TENS=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+const sub=n=>n<20?ONES[n]:TENS[Math.floor(n/10)]+(n%10?' '+ONES[n%10]:'');
+const toWords=n=>{
+  n=Math.round(n);if(!n)return'Zero';
+  const cr=Math.floor(n/1e7);n%=1e7;
+  const lk=Math.floor(n/1e5);n%=1e5;
+  const th=Math.floor(n/1e3);n%=1e3;
+  const hu=Math.floor(n/100);n%=100;
+  const p=[];
+  if(cr)p.push(sub(cr)+' Crore');if(lk)p.push(sub(lk)+' Lakh');
+  if(th)p.push(sub(th)+' Thousand');if(hu)p.push(ONES[hu]+' Hundred');if(n)p.push(sub(n));
+  return p.join(' ');
+};
+const fmtD=s=>{if(!s)return'';const[y,m,d]=s.split('-');return`${d}/${m}/${y}`;};
+
+function render(){
+  const invno  = document.getElementById('f_invno').value.trim();
+  const dateV  = document.getElementById('f_date').value;
+  const period = document.getElementById('f_period').value.trim();
+  const fee    = parseFloat(document.getElementById('f_fee').value)||0;
+  const tdsR   = parseFloat(document.getElementById('f_tds').value)||0;
+  const gstReg = document.getElementById('f_gst_reg').checked;
+  const gstRate= parseFloat(document.getElementById('f_gstrate').value)||18;
+  const gstin  = document.getElementById('f_gstin').value.trim();
+  const prem   = document.getElementById('f_premises').value.trim().replace(/\n/g,'<br/>');
+  const agrD   = document.getElementById('f_agr_date').value.trim();
+
+  const tdsAmt = Math.round(fee*tdsR/100*100)/100;
+  let gstAmt=0,cgst=0,sgst=0;
+  if(gstReg){gstAmt=Math.round(fee*gstRate/100*100)/100;cgst=sgst=gstAmt/2;}
+  const gross  = fee+gstAmt;
+  const net    = gross-tdsAmt;
+
+  document.getElementById('inv_badge').textContent=invno;
+
+  const gstRows = gstReg
+    ? `<tr><td class="tl">CGST @ ${gstRate/2}%</td><td class="tv">${ifmt(cgst)}</td></tr>
+       <tr><td class="tl">SGST @ ${gstRate/2}%</td><td class="tv">${ifmt(sgst)}</td></tr>
+       <tr><td class="tl">Gross Total</td><td class="tv">${ifmt(gross)}</td></tr>`
+    : `<tr><td class="tl">GST</td><td class="tv" style="color:var(--muted)">Nil — RCM on Licensee</td></tr>`;
+
+  const rcmNote = gstReg ? '' : `
+    <div class="rcm-note">
+      <strong>GST / RCM:</strong> Licensor is not registered under GST. As per the L&amp;L Agreement
+      dated ${agrD} and CGST Act 2017 s.9(3), GST on this license fee is payable by the Licensee
+      (Smardoce Solutions Pvt Ltd) directly to the Government under
+      <strong>Reverse Charge Mechanism (RCM)</strong>. No GST is payable to the Licensor.
+    </div>`;
+
+  const gstinLine = gstReg && gstin
+    ? `<br/>Licensor GSTIN: <strong>${gstin}</strong>` : '';
+
+  document.getElementById('invoice').innerHTML = `
+    <div class="inv-top">
+      <div>
+        <div class="from-name">RAJESH VISHRAM GORI HUF</div>
+        <div class="from-meta">
+          through its Karta: Rajesh Vishram Gori<br/>
+          301-B, Heritage CHS, Tambe Nagar, SN Road, Mumbai – 400080<br/>
+          PAN: AAIHR9391F &nbsp;|&nbsp; rajeshgori7@gmail.com${gstinLine}
+        </div>
+      </div>
+      <div class="inv-title-block">
+        <div class="inv-word">INVOICE</div>
+        <div class="inv-num">No. <strong>${invno}</strong></div>
+        <div class="inv-num">Date: <strong>${fmtD(dateV)}</strong></div>
+      </div>
+    </div>
+
+    <div class="sec-bar">BILLED TO</div>
+    <div class="sec-body">
+      <div class="to-name">SMARDOCE SOLUTIONS PRIVATE LIMITED <span style="font-weight:400;color:var(--muted)">(D3 Logistiks)</span></div>
+      <div class="to-meta">Block No 503, 5th Floor, Center Point, Andheri Kurla Road, Andheri East, Mumbai – 400059<br/>
+      GSTIN: 27ABDCS4745D1ZD &nbsp;|&nbsp; PAN: ABDCS4745D &nbsp;|&nbsp; Attn: Mr. Mahesh Kumar &nbsp;|&nbsp; mahesh.kumar@d3logistiks.com</div>
+    </div>
+
+    <div class="sec-bar" style="margin-top:14px">DESCRIPTION OF SERVICE</div>
+    <table class="svc-table">
+      <thead><tr>
+        <th style="width:50%">Particulars</th>
+        <th style="width:20%;text-align:center">Period</th>
+        <th class="r" style="width:13%">Rate</th>
+        <th class="r" style="width:17%">Amount</th>
+      </tr></thead>
+      <tbody><tr>
+        <td>
+          <div class="svc-main">License Fee – Commercial Premises</div>
+          <div class="svc-sub">${prem}<br/>L&amp;L Agreement dated ${agrD} &nbsp;|&nbsp; SAC: 997212</div>
+        </td>
+        <td style="text-align:center;color:var(--muted);font-size:11px">${period.replace(' to ','<br/>to<br/>')}</td>
+        <td class="r" style="color:var(--muted);font-size:11px">Monthly</td>
+        <td class="r">${ifmt(fee)}</td>
+      </tr></tbody>
+    </table>
+
+    <div class="tot-wrap">
+      <table class="tot-table">
+        <tr><td class="tl">License Fee</td><td class="tv">${ifmt(fee)}</td></tr>
+        ${gstRows}
+        <tr><td class="tl">Less TDS @ ${tdsR}% u/s 194-I</td><td class="tv" style="color:#DC2626">(${ifmt(tdsAmt)})</td></tr>
+        <tr class="div"><td></td><td></td></tr>
+        <tr class="net"><td>Net Receivable</td><td>${ifmt(net)}</td></tr>
+      </table>
+    </div>
+
+    <div class="words-row">Amount Receivable: Rupees ${toWords(net)} Only</div>
+    ${rcmNote}
+
+    <div class="sec-bar" style="margin-top:14px">PAYMENT DETAILS</div>
+    <div class="sec-body">
+      <div class="pay-cols">
+        <div class="pay-bank">
+          <div class="bank-grid">
+            <span class="bk">Bank</span><span class="bv">ICICI Bank – Mulund West, Station Road Branch</span>
+            <span class="bk">A/c Name</span><span class="bv">Rajesh Vishram Gori HUF through Rajesh Vishram Gori</span>
+            <span class="bk">A/c No.</span><span class="bv">124601001341</span>
+            <span class="bk">IFSC</span><span class="bv">ICICI0001246</span>
+            <span class="bk">Due by</span><span class="bv">5th of every month</span>
+          </div>
+        </div>
+        <div class="pay-tds">
+          TDS @ ${tdsR}% u/s 194-I to be deducted on ${ifmt(fee)}. Furnish Form 16A quarterly.
+          Do not deduct TDS on the RCM GST component paid separately to Government.
+        </div>
+      </div>
+    </div>
+
+    <div class="inv-footer">
+      <div class="foot-left">Computer-generated invoice<br/>rajeshgori7@gmail.com</div>
+      <div class="sig-block">
+        For <strong>RAJESH VISHRAM GORI HUF</strong>
+        <div class="sig-line"></div>
+        <div class="sig-lbl">Authorised Signatory (Karta)</div>
+      </div>
+    </div>`;
+}
+
+document.getElementById('f_gst_reg').addEventListener('change',function(){
+  document.getElementById('gst_fields').style.display=this.checked?'block':'none';render();
+});
+['f_invno','f_date','f_period','f_fee','f_tds','f_gstin','f_gstrate','f_premises','f_agr_date']
+  .forEach(id=>{const el=document.getElementById(id);if(el)el.addEventListener('input',render);});
+render();
+</script>
+</body>
+</html>
